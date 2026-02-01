@@ -1,0 +1,9 @@
+:root {
+	/* Initial Color Do not use directly */
+	--primary-color: #001f3f;
+	--secondary-color: #141414;
+	--complementary-color: #fcfcfc;
+	/* Utility Colors */
+	--text-size: 16px;
+	--spacing: 1rem;
+}
