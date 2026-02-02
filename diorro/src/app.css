@@ -1,9 +1,264 @@
+/* ============================================
+   MODERN CSS RESET
+   Basé sur Josh Comeau + Andy Bell (2026)
+   ============================================ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	margin: 0;
+}
+
+html {
+	-webkit-text-size-adjust: none;
+	text-size-adjust: none;
+}
+
+body {
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+	font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+/* Accessibilité: réduction des animations */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+
 :root {
-	/* Initial Color Do not use directly */
-	--primary-color: #001f3f;
-	--secondary-color: #141414;
-	--complementary-color: #fcfcfc;
-	/* Utility Colors */
-	--text-size: 16px;
-	--spacing: 1rem;
+	/* PRIMITIVES - Base tokens (DO NOT USE DIRECTLY) */
+
+	/* Colors - Palette */
+	--primitive-navy: #001f3f;
+	--primitive-charcoal: #141414;
+	--primitive-white: #fcfcfc;
+	--primitive-gray-50: #f9f9f9;
+	--primitive-gray-900: #1a1a1a;
+
+	/* Typography */
+	--primitive-font-size-base: 16px;
+	--primitive-font-family-sans: system-ui, -apple-system, sans-serif;
+
+	/* Spacing - Scale */
+	--primitive-space-unit: 0.25rem; /* 4px base */
+
+	/* SEMANTIC TOKENS - Decision layer */
+
+	/* Colors - Intent-based */
+	--color-text-primary: var(--primitive-charcoal);
+	--color-text-secondary: color-mix(in srgb, var(--primitive-charcoal) 70%, transparent);
+	--color-bg-primary: var(--primitive-white);
+	--color-bg-secondary: var(--primitive-gray-50);
+	--color-accent: var(--primitive-navy);
+	--color-interactive: var(--primitive-navy);
+	--color-interactive-hover: color-mix(in srgb, var(--primitive-navy) 85%, black);
+
+	/* Typography - Semantic */
+	--text-base: var(--primitive-font-size-base);
+	--text-sm: calc(var(--text-base) * 0.875); /* 14px */
+	--text-lg: calc(var(--text-base) * 1.125); /* 18px */
+	--text-xl: calc(var(--text-base) * 1.25); /* 20px */
+
+	/* Typography - Line heights */
+	--line-height-tight: 1.2;
+	--line-height-base: 1.6;
+
+	/* Typography - Font weights */
+	--font-weight-regular: 400;
+	--font-weight-medium: 500;
+	--font-weight-bold: 700;
+
+	/* Spacing - Semantic scale */
+	--space-xs: calc(var(--primitive-space-unit) * 2); /* 8px */
+	--space-sm: calc(var(--primitive-space-unit) * 3); /* 12px */
+	--space-md: calc(var(--primitive-space-unit) * 4); /* 16px */
+	--space-lg: calc(var(--primitive-space-unit) * 6); /* 24px */
+	--space-xl: calc(var(--primitive-space-unit) * 8); /* 32px */
+
+	/* COMPONENT TOKENS - Usage-specific */
+
+	--button-bg: var(--color-interactive);
+	--button-bg-hover: var(--color-interactive-hover);
+	--button-text: var(--primitive-white);
+	--button-padding: var(--space-sm) var(--space-lg);
+
+	--card-bg: var(--color-bg-primary);
+	--card-padding: var(--space-lg);
+	--card-border-radius: 8px;
+}
+
+/* ============================================
+   CUSTOM FONTS
+   ============================================ */
+
+@font-face {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/inter-v20-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/inter-v20-latin-500.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/inter-v20-latin-700.woff2') format('woff2');
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+html {
+	font-size: var(--text-base);
+}
+
+body {
+	font-family: 'Inter', var(--primitive-font-family-sans);
+	font-weight: var(--font-weight-regular);
+	color: var(--color-text-primary);
+	background-color: var(--color-bg-primary);
+}
+
+/* ============================================
+   TYPOGRAPHY HIERARCHY
+   ============================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin-bottom: var(--space-md);
+	font-weight: var(--font-weight-bold);
+	line-height: var(--line-height-tight);
+	color: var(--color-text-primary);
+}
+
+h1 {
+	font-size: calc(var(--text-base) * 2.5); /* 40px */
+}
+
+h2 {
+	font-size: calc(var(--text-base) * 2); /* 32px */
+}
+
+h3 {
+	font-size: var(--text-xl); /* 20px */
+	font-weight: 600;
+}
+
+h4 {
+	font-size: var(--text-lg); /* 18px */
+	font-weight: 600;
+}
+
+p {
+	margin-bottom: var(--space-md);
+	line-height: var(--line-height-base);
+}
+
+small {
+	font-size: var(--text-sm);
+	color: var(--color-text-secondary);
+}
+
+strong,
+b {
+	font-weight: var(--font-weight-bold);
+}
+
+em,
+i {
+	font-style: italic;
+}
+
+/* Liens par défaut (contenu) */
+a {
+	color: var(--color-interactive);
+	text-decoration-skip-ink: auto;
+}
+
+a:hover {
+	color: var(--color-interactive-hover);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-sm {
+	font-size: var(--text-sm);
+}
+
+.text-lg {
+	font-size: var(--text-lg);
+}
+
+.text-xl {
+	font-size: var(--text-xl);
+}
+
+.text-secondary {
+	color: var(--color-text-secondary);
+}
+
+.font-medium {
+	font-weight: var(--font-weight-medium);
+}
+
+.font-bold {
+	font-weight: var(--font-weight-bold);
 }
