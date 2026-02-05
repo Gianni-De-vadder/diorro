@@ -1,8 +1,9 @@
-<!-- src/lib/components/Header.svelte -->
 <script lang="ts">
 	import { page } from '$app/state';
 	import { visibleNavLinks } from '$lib/config/navigation';
 	import Button from '$lib/components/Button.svelte';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import LogoDiorro from '$lib/components/LogoDiorro.svelte';
 
 	let mobileMenuOpen = $state(false);
 
@@ -14,20 +15,30 @@
 		mobileMenuOpen = false;
 	}
 
-	// TYPAGE : KeyboardEvent
 	function handleKeydown(event: KeyboardEvent): void {
 		if (event.key === 'Escape' && mobileMenuOpen) {
 			closeMenu();
 		}
 	}
 
-	// TYPAGE : string
 	function isActive(href: string): boolean {
 		if (href === '/') {
 			return page.url.pathname === '/';
 		}
 		return page.url.pathname.startsWith(href);
 	}
+
+	$effect(() => {
+		if (mobileMenuOpen) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = '';
+		}
+
+		return () => {
+			document.body.style.overflow = '';
+		};
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -35,12 +46,12 @@
 <header>
 	<div class="container">
 		<a href="/" class="logo" aria-label="Accueil">
-			<span class="logo-text">Diorro</span>
+			<LogoDiorro width="120" height="auto" />
 		</a>
 
 		<nav class="desktop-nav" aria-label="Navigation principale">
 			<ul>
-				{#each visibleNavLinks as link}
+				{#each visibleNavLinks as link (link.href)}
 					<li>
 						<a href={link.href} class:active={isActive(link.href)}>
 							{link.label.toUpperCase()}
@@ -51,6 +62,8 @@
 		</nav>
 
 		<div class="header-actions">
+			<ThemeToggle />
+
 			<Button href="/contact" variant="primary" size="medium">Nous contacter</Button>
 
 			<button
@@ -67,13 +80,19 @@
 	</div>
 
 	{#if mobileMenuOpen}
-		<!-- MODIFICATION : Overlay cliquable au lieu de div avec onclick -->
-		<div class="mobile-menu-overlay" onclick={closeMenu} role="presentation"></div>
+		<div
+			class="mobile-menu-overlay"
+			onclick={closeMenu}
+			onkeydown={(e) => e.key === 'Enter' && closeMenu()}
+			role="button"
+			tabindex="-1"
+			aria-label="Fermer le menu"
+		></div>
 
 		<div class="mobile-menu" id="mobile-menu">
 			<nav aria-label="Navigation mobile">
 				<ul>
-					{#each visibleNavLinks as link}
+					{#each visibleNavLinks as link (link.href)}
 						<li>
 							<a href={link.href} class:active={isActive(link.href)} onclick={closeMenu}>
 								{link.label}
@@ -92,13 +111,22 @@
 
 <style>
 	header {
-		background-color: var(--color-bg-primary);
+		background-color: color-mix(in srgb, var(--color-bg-primary) 95%, transparent);
 		border-bottom: 1px solid var(--primitive-gray-50);
-		position: sticky;
+		position: fixed;
 		top: 0;
+		left: 0;
+		right: 0;
 		z-index: 100;
 		backdrop-filter: blur(8px);
-		background-color: color-mix(in srgb, var(--color-bg-primary) 95%, transparent);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		header {
+			transition:
+				background-color 0.3s ease,
+				border-color 0.3s ease;
+		}
 	}
 
 	.container {
@@ -116,8 +144,13 @@
 		color: var(--color-text-primary);
 		font-weight: var(--font-weight-bold);
 		font-size: var(--text-lg);
-		transition: color 0.2s ease;
 		flex-shrink: 0;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.logo {
+			transition: color 0.2s ease;
+		}
 	}
 
 	.logo:hover {
@@ -150,9 +183,14 @@
 		font-size: var(--text-base);
 		padding: var(--space-xs) var(--space-sm);
 		border-radius: 4px;
-		transition: all 0.2s ease;
 		position: relative;
 		white-space: nowrap;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.desktop-nav a {
+			transition: all 0.2s ease;
+		}
 	}
 
 	.desktop-nav a:hover {
@@ -185,9 +223,13 @@
 		width: 44px;
 		height: 44px;
 		border-radius: 4px;
-		transition: background-color 0.2s ease;
 		flex-shrink: 0;
-		margin-left: auto;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.mobile-toggle {
+			transition: background-color 0.2s ease;
+		}
 	}
 
 	.mobile-toggle:hover {
@@ -209,7 +251,14 @@
 		height: 2px;
 		background-color: var(--color-text-primary);
 		border-radius: 2px;
-		transition: all 0.3s ease;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hamburger,
+		.hamburger::before,
+		.hamburger::after {
+			transition: all 0.3s ease;
+		}
 	}
 
 	.hamburger::before,
@@ -221,7 +270,6 @@
 		height: 2px;
 		background-color: var(--color-text-primary);
 		border-radius: 2px;
-		transition: all 0.3s ease;
 	}
 
 	.hamburger::before {
@@ -246,7 +294,6 @@
 		bottom: 0;
 	}
 
-	/* NOUVEAU : Overlay semi-transparent pour fermer le menu */
 	.mobile-menu-overlay {
 		display: none;
 		position: fixed;
@@ -295,7 +342,12 @@
 		font-weight: var(--font-weight-medium);
 		padding: var(--space-sm) var(--space-md);
 		border-radius: 4px;
-		transition: all 0.2s ease;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.mobile-menu a {
+			transition: all 0.2s ease;
+		}
 	}
 
 	.mobile-menu a:hover {
@@ -339,6 +391,10 @@
 		.mobile-menu-overlay,
 		.mobile-menu {
 			display: block;
+		}
+
+		.header-actions {
+			gap: var(--space-sm);
 		}
 	}
 

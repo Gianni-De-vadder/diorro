@@ -1,35 +1,49 @@
-<!-- src/routes/+layout.svelte -->
 <script>
 	import '../app.css';
 	import Header from '$lib/components/layout/Header.svelte';
+	import Footer from '$lib/components/layout/Footer.svelte';
 	import DecorativeLines from '$lib/components/layout/DecorativeLines.svelte';
+
+	let { children } = $props();
 </script>
 
-<!-- Lignes décoratives fixes sur TOUTES les pages -->
-<DecorativeLines
-	lineCount={7}
-	maxWidth={320}
-	minWidth={20}
-	lineHeight={26}
-	containerHeight={75}
-	color="var(--primitive-navy)"
-	animationDuration={1.2}
-	animationStagger={0.2}
-	curveIntensity={35}
-	cutAngle={18}
-	curveStart={0.7}
-	centerLineRatio={0.85}
-/>
+<svelte:head>
+	<title>Diorro - Agence Web</title>
+	<meta name="description" content="Création de sites web sur mesure" />
+</svelte:head>
+
+<a href="#main-content" class="skip-link">Aller au contenu principal</a>
+
+<DecorativeLines centerLineRatio={0.8} />
 
 <Header />
 
-<main>
-	<slot />
+<main id="main-content">
+	{@render children()}
 </main>
 
+<Footer />
+
 <style>
+	.skip-link {
+		position: absolute;
+		top: -40px;
+		left: 0;
+		background: var(--color-interactive);
+		color: var(--primitive-white);
+		padding: var(--space-sm) var(--space-md);
+		text-decoration: none;
+		z-index: 100;
+		border-radius: 0 0 4px 0;
+	}
+
+	.skip-link:focus {
+		top: 0;
+	}
+
 	main {
 		position: relative;
-		min-height: 100vh;
+		min-height: calc(100vh - var(--header-height, 80px) - var(--footer-height, 200px));
+		padding-block: var(--space-xl);
 	}
 </style>

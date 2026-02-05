@@ -1,8 +1,3 @@
-/* ============================================
-   MODERN CSS RESET
-   Basé sur Josh Comeau + Andy Bell (2026)
-   ============================================ */
-
 *,
 *::before,
 *::after {
@@ -69,12 +64,16 @@ h6 {
 :root {
 	/* PRIMITIVES - Base tokens (DO NOT USE DIRECTLY) */
 
-	/* Colors - Palette */
+	/* Colors - Palette LIGHT */
 	--primitive-navy: #001f3f;
+	--primitive-beige: #e8dcc3;
 	--primitive-charcoal: #141414;
 	--primitive-white: #fcfcfc;
+	--primitive-off-white: #f0f0db;
+	--primitive-dark-bg: #181818;
 	--primitive-gray-50: #f9f9f9;
 	--primitive-gray-900: #1a1a1a;
+	--primitive-gray-800: #2a2a2a;
 
 	/* Typography */
 	--primitive-font-size-base: 16px;
@@ -83,7 +82,7 @@ h6 {
 	/* Spacing - Scale */
 	--primitive-space-unit: 0.25rem; /* 4px base */
 
-	/* SEMANTIC TOKENS - Decision layer */
+	/* SEMANTIC TOKENS - Decision layer (LIGHT MODE par défaut) */
 
 	/* Colors - Intent-based */
 	--color-text-primary: var(--primitive-charcoal);
@@ -126,6 +125,53 @@ h6 {
 	--card-bg: var(--color-bg-primary);
 	--card-padding: var(--space-lg);
 	--card-border-radius: 8px;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+[data-theme='dark'] {
+	/* Redéfinition des SEMANTIC TOKENS uniquement */
+
+	/* Colors - Intent-based DARK */
+	--color-text-primary: var(--primitive-off-white);
+	--color-text-secondary: color-mix(in srgb, var(--primitive-off-white) 70%, transparent);
+	--color-bg-primary: var(--primitive-dark-bg);
+	--color-bg-secondary: var(--primitive-gray-800);
+	--color-accent: var(--primitive-beige);
+	--color-interactive: var(--primitive-beige);
+	--color-interactive-hover: color-mix(in srgb, var(--primitive-beige) 90%, white);
+
+	/* Button tokens dark */
+	--button-text: var(--primitive-charcoal); /* Texte sombre sur fond beige */
+}
+
+/* Alternative : Support de la préférence système automatique */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--color-text-primary: var(--primitive-off-white);
+		--color-text-secondary: color-mix(in srgb, var(--primitive-off-white) 70%, transparent);
+		--color-bg-primary: var(--primitive-dark-bg);
+		--color-bg-secondary: var(--primitive-gray-800);
+		--color-accent: var(--primitive-beige);
+		--color-interactive: var(--primitive-beige);
+		--color-interactive-hover: color-mix(in srgb, var(--primitive-beige) 90%, white);
+		--button-text: var(--primitive-charcoal);
+	}
+}
+
+/* Transition smooth entre les thèmes */
+html {
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease;
+}
+
+body {
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease;
 }
 
 /* ============================================
@@ -261,4 +307,222 @@ a:hover {
 
 .font-bold {
 	font-weight: var(--font-weight-bold);
+}
+.flex {
+	display: flex;
+}
+
+.flex-row {
+	flex-direction: row;
+}
+
+.flex-col {
+	flex-direction: column;
+}
+
+.justify-start {
+	justify-content: flex-start;
+}
+
+.justify-end {
+	justify-content: flex-end;
+}
+
+.justify-center {
+	justify-content: center;
+}
+
+.justify-between {
+	justify-content: space-between;
+}
+
+.justify-around {
+	justify-content: space-around;
+}
+
+.align-start {
+	align-items: flex-start;
+}
+
+.align-end {
+	align-items: flex-end;
+}
+
+.align-center {
+	align-items: center;
+}
+
+/* Height utilities */
+.h-screen {
+	height: 100vh;
+}
+
+.h-half-screen {
+	height: 50vh;
+}
+
+.h-auto {
+	height: auto;
+}
+
+/* Width utilities */
+.w-full {
+	width: 100%;
+}
+
+.w-half {
+	width: 50%;
+}
+
+.w-auto {
+	width: auto;
+}
+
+/* Padding utilities */
+.pt-sm {
+	padding-top: var(--space-sm);
+}
+
+.pt-md {
+	padding-top: var(--space-md);
+}
+
+.pt-lg {
+	padding-top: var(--space-lg);
+}
+
+.pt-xl {
+	padding-top: var(--space-xl);
+}
+
+/* Background utilities */
+.bg-primary {
+	background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+	background-color: var(--color-bg-secondary);
+}
+
+/* Responsive utilities */
+@media (min-width: 768px) {
+	.md\:flex-row {
+		flex-direction: row;
+	}
+
+	.md\:flex-col {
+		flex-direction: column;
+	}
+}
+/* ============================================
+   RESPONSIVE UTILITIES (AJOUTS)
+   ============================================ */
+
+/* Flexbox utilities supplémentaires */
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
+.gap-xs {
+	gap: var(--space-xs);
+}
+.gap-sm {
+	gap: var(--space-sm);
+}
+.gap-md {
+	gap: var(--space-md);
+}
+.gap-lg {
+	gap: var(--space-lg);
+}
+.gap-xl {
+	gap: var(--space-xl);
+}
+
+/* Overflow utilities */
+.overflow-hidden {
+	overflow: hidden;
+}
+
+.overflow-x-hidden {
+	overflow-x: hidden;
+}
+
+.overflow-y-auto {
+	overflow-y: auto;
+}
+
+/* Height utilities mobile-safe (avec dvh fallback) */
+.h-screen-safe {
+	min-height: 100vh; /* Fallback */
+	min-height: 100dvh; /* Dynamic viewport height */
+}
+
+.h-half-safe {
+	min-height: 50vh;
+	min-height: 50dvh;
+}
+
+/* Padding responsive avec clamp (variantes fluid) */
+.px-fluid {
+	padding-inline: clamp(1rem, 5vw, 3rem);
+}
+
+.py-fluid {
+	padding-block: clamp(1rem, 5vh, 3rem);
+}
+
+.pt-fluid-sm {
+	padding-top: clamp(0.5rem, 2vh, 1rem);
+}
+
+.pt-fluid-md {
+	padding-top: clamp(1rem, 4vh, 2rem);
+}
+
+.pt-fluid-lg {
+	padding-top: clamp(1.5rem, 6vh, 3rem);
+}
+
+.pt-fluid-xl {
+	padding-top: clamp(2rem, 8vh, 4rem);
+}
+
+/* Text alignment */
+.text-center {
+	text-align: center;
+}
+
+.text-left {
+	text-align: left;
+}
+
+.text-right {
+	text-align: right;
+}
+
+/* Max-width utilities pour responsive content */
+.max-w-prose {
+	max-width: 65ch; /* Largeur optimale pour lecture */
+}
+
+.max-w-screen-sm {
+	max-width: 640px;
+}
+
+.max-w-screen-md {
+	max-width: 768px;
+}
+
+.max-w-screen-lg {
+	max-width: 1024px;
+}
+
+.max-w-screen-xl {
+	max-width: 1280px;
+}
+
+/* Box sizing utility */
+.box-border {
+	box-sizing: border-box;
 }

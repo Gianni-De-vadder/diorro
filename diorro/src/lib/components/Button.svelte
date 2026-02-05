@@ -1,5 +1,17 @@
-<!-- src/lib/components/Button.svelte -->
-<script>
+<script lang="ts">
+	interface Props {
+		variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+		size?: 'small' | 'medium' | 'large';
+		href?: string | null;
+		type?: 'button' | 'submit' | 'reset';
+		disabled?: boolean;
+		fullWidth?: boolean;
+		loading?: boolean;
+		onclick?: ((e: MouseEvent) => void) | null;
+		children: import('svelte').Snippet;
+		[key: string]: unknown;
+	}
+
 	let {
 		variant = 'primary',
 		size = 'medium',
@@ -11,9 +23,8 @@
 		onclick = null,
 		children,
 		...restProps
-	} = $props();
+	}: Props = $props();
 
-	// CORRECTION : Utiliser $derived pour rendre Tag réactif
 	const Tag = $derived(href ? 'a' : 'button');
 </script>
 
@@ -26,7 +37,6 @@
 	type={href ? undefined : type}
 	disabled={disabled || loading}
 	{onclick}
-	role={href ? 'button' : undefined}
 	aria-disabled={disabled || loading}
 	{...restProps}
 >
@@ -61,7 +71,6 @@
 		outline-offset: 2px;
 	}
 
-	/* Variants */
 	.btn-primary {
 		background-color: var(--button-bg);
 		color: var(--button-text);
@@ -70,7 +79,7 @@
 	.btn-primary:hover:not(:disabled) {
 		background-color: var(--button-bg-hover);
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--primitive-navy) 30%, transparent);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--color-interactive) 30%, transparent);
 	}
 
 	.btn-primary:active:not(:disabled) {
@@ -80,12 +89,12 @@
 	.btn-secondary {
 		background-color: var(--color-bg-secondary);
 		color: var(--color-text-primary);
-		border: 1px solid var(--primitive-gray-50);
+		border: 1px solid color-mix(in srgb, var(--color-text-primary) 20%, transparent);
 	}
 
 	.btn-secondary:hover:not(:disabled) {
-		background-color: var(--primitive-gray-50);
-		border-color: color-mix(in srgb, var(--primitive-charcoal) 20%, transparent);
+		background-color: color-mix(in srgb, var(--color-bg-secondary) 90%, var(--color-text-primary));
+		border-color: color-mix(in srgb, var(--color-text-primary) 30%, transparent);
 	}
 
 	.btn-outline {
@@ -96,7 +105,7 @@
 
 	.btn-outline:hover:not(:disabled) {
 		background-color: var(--color-interactive);
-		color: var(--primitive-white);
+		color: var(--button-text);
 	}
 
 	.btn-ghost {
@@ -108,7 +117,6 @@
 		background-color: var(--color-bg-secondary);
 	}
 
-	/* Sizes */
 	.btn-small {
 		padding: var(--space-xs) var(--space-md);
 		font-size: var(--text-sm);
@@ -127,7 +135,6 @@
 		min-height: 52px;
 	}
 
-	/* States */
 	.btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
@@ -152,7 +159,6 @@
 		opacity: 0.7;
 	}
 
-	/* Spinner pour état loading */
 	.spinner {
 		display: inline-block;
 		width: 16px;
@@ -160,7 +166,12 @@
 		border: 2px solid currentColor;
 		border-top-color: transparent;
 		border-radius: 50%;
-		animation: spin 0.6s linear infinite;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.spinner {
+			animation: spin 0.6s linear infinite;
+		}
 	}
 
 	@keyframes spin {

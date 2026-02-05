@@ -1,6 +1,20 @@
-<!-- src/lib/components/DecorativeLines.svelte -->
-<script>
+<script lang="ts">
 	import { browser } from '$app/environment';
+
+	interface Props {
+		lineCount?: number;
+		maxWidth?: number;
+		minWidth?: number;
+		lineHeight?: number;
+		containerHeight?: number;
+		color?: string;
+		animationDuration?: number;
+		animationStagger?: number;
+		curveIntensity?: number;
+		cutAngle?: number;
+		curveStart?: number;
+		centerLineRatio?: number;
+	}
 
 	let {
 		lineCount = 7,
@@ -15,38 +29,50 @@
 		cutAngle = 20,
 		curveStart = 0.7,
 		centerLineRatio = 0.85
-	} = $props();
+	}: Props = $props();
 
-	// Détection de la largeur d'écran
-	let windowWidth = $state(browser ? window.innerWidth : 1200);
+	let windowWidth = $state(browser ? window.innerWidth : 0);
 
-	// Props responsives dérivées
-	const responsiveMaxWidth = $derived(windowWidth <= 768 ? maxWidth * 0.4 : maxWidth);
-	const responsiveMinWidth = $derived(windowWidth <= 768 ? minWidth * 0.5 : minWidth);
-	const responsiveLineHeight = $derived(windowWidth <= 768 ? lineHeight * 0.7 : lineHeight);
+	const validLineCount = $derived(lineCount % 2 === 0 ? lineCount + 1 : lineCount);
+	const isMobile = $derived(windowWidth <= 480 && windowWidth > 0);
+
+	const responsiveMaxWidth = $derived(windowWidth <= 768 ? maxWidth * 1.2 : maxWidth);
+	const responsiveMinWidth = $derived(windowWidth <= 768 ? minWidth * 1.5 : minWidth);
+	const responsiveLineHeight = $derived(windowWidth <= 768 ? lineHeight * 1.2 : lineHeight);
 	const responsiveCurveIntensity = $derived(
-		windowWidth <= 768 ? curveIntensity * 0.6 : curveIntensity
+		windowWidth <= 768 ? curveIntensity * 0.8 : curveIntensity
 	);
-	const responsiveCutAngle = $derived(windowWidth <= 768 ? cutAngle * 0.7 : cutAngle);
+	const responsiveCutAngle = $derived(windowWidth <= 768 ? cutAngle * 1 : cutAngle);
 
-	$effect(() => {
-		if (lineCount % 2 === 0) {
-			console.warn('lineCount doit être impair. Ajustement automatique.');
-			lineCount = lineCount + 1;
-		}
-	});
+	// Version mobile améliorée: on garde la couleur navy avec opacité
+	const lineColor = $derived(isMobile ? 'var(--primitive-navy)' : color);
 
-	function generateLines() {
-		const lines = [];
-		const middle = Math.floor(lineCount / 2);
+	interface Line {
+		width: number;
+		delay: number;
+		y: number;
+		curveDirection: number;
+		isCenter: boolean;
+		isAboveCenter: boolean;
+		id: string;
+		cp1x: number;
+		cp1y: number;
+		cp2x: number;
+		cp2y: number;
+		opacity?: number;
+	}
+
+	const lines = $derived.by(() => {
+		const result: Line[] = [];
+		const middle = Math.floor(validLineCount / 2);
 		const totalHeight = 1000;
-		const spacing = (totalHeight * 0.8) / (lineCount - 1);
+		const spacing = (totalHeight * 0.8) / (validLineCount - 1);
 
-		for (let i = 0; i < lineCount; i++) {
+		for (let i = 0; i < validLineCount; i++) {
 			const distanceFromCenter = Math.abs(i - middle);
 			const ratio = 1 - distanceFromCenter / middle;
 
-			let width;
+			let width: number;
 			if (i === middle) {
 				width = responsiveMaxWidth * centerLineRatio;
 			} else {
@@ -68,7 +94,10 @@
 			const cp2x = width * 0.8;
 			const cp2y = y + curveDirection;
 
-			lines.push({
+			// Opacité graduelle pour mobile: plus fort au centre
+			const opacity = isMobile ? 0.08 + ratio * 0.12 : 1;
+
+			result.push({
 				width,
 				delay,
 				y,
@@ -79,24 +108,31 @@
 				cp1x,
 				cp1y,
 				cp2x,
-				cp2y
+				cp2y,
+				opacity
 			});
 		}
 
-		return lines;
-	}
-
-	const lines = $derived(generateLines());
+		return result;
+	});
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} />
 
-{#if windowWidth > 480}
-	<div class="decorative-lines">
-		<!-- Lignes gauche -->
+{#if browser && windowWidth > 0}
+	<div class="decorative-lines" class:mobile={isMobile}>
 		<svg class="lines-svg" viewBox="0 0 350 1000" preserveAspectRatio="none">
 			<defs>
-				{#each lines as line}
+				<!-- Gradient pour effet de profondeur en mobile -->
+				{#if isMobile}
+					<linearGradient id="mobile-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" style="stop-color:{lineColor};stop-opacity:0" />
+						<stop offset="50%" style="stop-color:{lineColor};stop-opacity:1" />
+						<stop offset="100%" style="stop-color:{lineColor};stop-opacity:0.3" />
+					</linearGradient>
+				{/if}
+
+				{#each lines as line (line.id)}
 					<clipPath id="clip-left-{line.id}">
 						{#if line.isCenter}
 							<rect
@@ -130,7 +166,7 @@
 				{/each}
 			</defs>
 
-			{#each lines as line}
+			{#each lines as line (line.id)}
 				<path
 					d="
                         M 0,{line.y - responsiveLineHeight / 2}
@@ -143,77 +179,80 @@
 						responsiveLineHeight / 2}
                         Z
                     "
-					fill={color}
+					fill={isMobile ? 'url(#mobile-gradient)' : lineColor}
 					clip-path="url(#clip-left-{line.id})"
 					class="line"
+					class:mobile-line={isMobile}
 					style="
                         animation-delay: {line.delay}s;
                         animation-duration: {animationDuration}s;
+                        {isMobile ? `opacity: ${line.opacity};` : ''}
                     "
 				/>
 			{/each}
 		</svg>
 
-		<!-- Lignes droite (miroir) -->
-		<svg class="lines-svg mirror" viewBox="0 0 350 1000" preserveAspectRatio="none">
-			<defs>
-				{#each lines as line}
-					<clipPath id="clip-right-{line.id}">
-						{#if line.isCenter}
-							<rect
-								x={350 - line.width}
-								y={line.y - responsiveLineHeight / 2}
-								width={line.width}
-								height={responsiveLineHeight}
-							/>
-						{:else if line.isAboveCenter}
-							<polygon
-								points="
-                                350,{line.y - responsiveLineHeight / 2}
-                                {350 - line.width + responsiveCutAngle},{line.y -
-									responsiveLineHeight / 2}
-                                {350 - line.width},{line.y + responsiveLineHeight / 2}
-                                350,{line.y + responsiveLineHeight / 2}
-                            "
-							/>
-						{:else}
-							<polygon
-								points="
-                                350,{line.y - responsiveLineHeight / 2}
-                                {350 - line.width},{line.y - responsiveLineHeight / 2}
-                                {350 - line.width + responsiveCutAngle},{line.y +
-									responsiveLineHeight / 2}
-                                350,{line.y + responsiveLineHeight / 2}
-                            "
-							/>
-						{/if}
-					</clipPath>
+		{#if !isMobile}
+			<svg class="lines-svg mirror" viewBox="0 0 350 1000" preserveAspectRatio="none">
+				<defs>
+					{#each lines as line (line.id)}
+						<clipPath id="clip-right-{line.id}">
+							{#if line.isCenter}
+								<rect
+									x={350 - line.width}
+									y={line.y - responsiveLineHeight / 2}
+									width={line.width}
+									height={responsiveLineHeight}
+								/>
+							{:else if line.isAboveCenter}
+								<polygon
+									points="
+                                    350,{line.y - responsiveLineHeight / 2}
+                                    {350 - line.width + responsiveCutAngle},{line.y -
+										responsiveLineHeight / 2}
+                                    {350 - line.width},{line.y + responsiveLineHeight / 2}
+                                    350,{line.y + responsiveLineHeight / 2}
+                                "
+								/>
+							{:else}
+								<polygon
+									points="
+                                    350,{line.y - responsiveLineHeight / 2}
+                                    {350 - line.width},{line.y - responsiveLineHeight / 2}
+                                    {350 - line.width + responsiveCutAngle},{line.y +
+										responsiveLineHeight / 2}
+                                    350,{line.y + responsiveLineHeight / 2}
+                                "
+								/>
+							{/if}
+						</clipPath>
+					{/each}
+				</defs>
+
+				{#each lines as line (line.id)}
+					<path
+						d="
+                            M 350,{line.y - responsiveLineHeight / 2}
+                            C {350 - line.cp1x},{line.cp1y - responsiveLineHeight / 2} {350 -
+							line.cp2x},{line.cp2y - responsiveLineHeight / 2} {350 - line.width},{line.y -
+							responsiveLineHeight / 2}
+                            L {350 - line.width},{line.y + responsiveLineHeight / 2}
+                            C {350 - line.cp2x},{line.cp2y + responsiveLineHeight / 2} {350 -
+							line.cp1x},{line.cp1y + responsiveLineHeight / 2} 350,{line.y +
+							responsiveLineHeight / 2}
+                            Z
+                        "
+						fill={lineColor}
+						clip-path="url(#clip-right-{line.id})"
+						class="line"
+						style="
+                            animation-delay: {line.delay}s;
+                            animation-duration: {animationDuration}s;
+                        "
+					/>
 				{/each}
-			</defs>
-
-			{#each lines as line}
-				<path
-					d="
-                        M 350,{line.y - responsiveLineHeight / 2}
-                        C {350 - line.cp1x},{line.cp1y - responsiveLineHeight / 2} {350 -
-						line.cp2x},{line.cp2y - responsiveLineHeight / 2} {350 - line.width},{line.y -
-						responsiveLineHeight / 2}
-                        L {350 - line.width},{line.y + responsiveLineHeight / 2}
-                        C {350 - line.cp2x},{line.cp2y + responsiveLineHeight / 2} {350 -
-						line.cp1x},{line.cp1y + responsiveLineHeight / 2} 350,{line.y +
-						responsiveLineHeight / 2}
-                        Z
-                    "
-					fill={color}
-					clip-path="url(#clip-right-{line.id})"
-					class="line"
-					style="
-                        animation-delay: {line.delay}s;
-                        animation-duration: {animationDuration}s;
-                    "
-				/>
-			{/each}
-		</svg>
+			</svg>
+		{/if}
 	</div>
 {/if}
 
@@ -232,23 +271,71 @@
 		align-items: center;
 	}
 
+	.decorative-lines.mobile {
+		z-index: -1;
+		justify-content: flex-start;
+		align-items: flex-start;
+	}
+
 	.lines-svg {
 		width: 350px;
 		height: 75%;
-		transition:
-			width 0.3s ease,
-			height 0.3s ease;
 	}
 
 	.line {
-		opacity: 0;
-		transform: scaleX(0);
 		transform-origin: left center;
-		animation: slideIn ease-out forwards;
 	}
 
 	.mirror .line {
 		transform-origin: right center;
+	}
+
+	@media (min-width: 481px) and (prefers-reduced-motion: no-preference) {
+		.lines-svg {
+			transition:
+				width 0.3s ease,
+				height 0.3s ease;
+		}
+
+		.line {
+			opacity: 0;
+			transform: scaleX(0);
+			animation: slideIn ease-out forwards;
+		}
+	}
+
+	@media (min-width: 481px) and (prefers-reduced-motion: reduce) {
+		.line {
+			opacity: 1;
+			transform: scaleX(1);
+			animation: none;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.line {
+			transform: scaleX(1) !important;
+			animation: none !important;
+		}
+
+		.mobile-line {
+			/* Effet de mélange pour plus de profondeur */
+			mix-blend-mode: multiply;
+		}
+
+		.lines-svg {
+			width: 100%;
+			max-width: 420px;
+			height: 100%;
+			/* Légère translation pour créer plus de dynamisme */
+			transform: translateX(-5%);
+		}
+
+		.decorative-lines {
+			padding-left: 0;
+			/* Léger dégradé de fond pour intégration subtile */
+			background: linear-gradient(135deg, rgba(212, 222, 236, 0.03) 0%, rgba(255, 255, 255, 0) 50%);
+		}
 	}
 
 	@keyframes slideIn {
@@ -262,8 +349,7 @@
 		}
 	}
 
-	/* Tablette : Adaptation progressive */
-	@media (max-width: 768px) {
+	@media (max-width: 768px) and (min-width: 481px) {
 		.lines-svg {
 			width: 140px;
 			height: 60%;
@@ -271,13 +357,6 @@
 
 		.line {
 			opacity: 0.35;
-		}
-	}
-
-	/* Mobile : Cache complètement */
-	@media (max-width: 480px) {
-		.decorative-lines {
-			display: none;
 		}
 	}
 </style>

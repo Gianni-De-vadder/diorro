@@ -1,6 +1,11 @@
-<!-- src/lib/components/LogoDiorro.svelte -->
-<script>
-	let { width = '100%', height = 'auto', class: className = '' } = $props();
+<script lang="ts">
+	interface Props {
+		width?: string | number;
+		height?: string | number;
+		class?: string;
+	}
+
+	let { width = '100%', height = 'auto', class: className = '' }: Props = $props();
 </script>
 
 <svg
@@ -10,7 +15,7 @@
 	{height}
 	class="logo-diorro {className}"
 	role="img"
-	aria-label="DIORRO"
+	aria-label="Logo Diorro"
 >
 	<g>
 		<path
@@ -40,7 +45,12 @@
 <style>
 	.logo-diorro {
 		display: block;
-		color: var(--primitive-navy);
-		transition: all 0.3s ease;
+		color: var(--color-interactive);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.logo-diorro {
+			transition: color 0.3s ease;
+		}
 	}
 </style>
