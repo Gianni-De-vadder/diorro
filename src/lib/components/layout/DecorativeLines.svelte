@@ -14,6 +14,9 @@
 		cutAngle?: number;
 		curveStart?: number;
 		centerLineRatio?: number;
+		// Nouvelles props pour l'effet de "push" dynamique
+		basePushDistance?: number;
+		maxPushDistance?: number;
 	}
 
 	let {
@@ -28,10 +31,48 @@
 		curveIntensity = 30,
 		cutAngle = 20,
 		curveStart = 0.7,
-		centerLineRatio = 0.85
+		centerLineRatio = 0.85,
+		basePushDistance = 0,
+		maxPushDistance = 150
 	}: Props = $props();
 
 	let windowWidth = $state(browser ? window.innerWidth : 0);
+	let scrollY = $state(0);
+	let documentHeight = $state(browser ? document.body.scrollHeight : 1);
+
+	// Calcul du facteur de "push" basé sur le scroll
+	// Les lignes s'écartent progressivement quand on scroll
+	const scrollProgress = $derived(() => {
+		if (!browser || documentHeight <= windowHeight) return 0;
+		const maxScroll = documentHeight - windowHeight;
+		return Math.min(scrollY / maxScroll, 1);
+	});
+
+	let windowHeight = $state(browser ? window.innerHeight : 0);
+
+	// Distance de push dynamique basée sur le scroll
+	// Utilise une fonction sinusoïdale pour un effet plus fluide
+	const pushDistance = $derived(() => {
+		const progress = scrollProgress();
+		// Effet ondulé: les lignes s'écartent et se resserrent légèrement
+		const wave = Math.sin(progress * Math.PI * 2) * 0.3 + 0.7;
+		return basePushDistance + (maxPushDistance * progress * wave);
+	});
+
+	// Observer pour détecter les changements de taille du document
+	$effect(() => {
+		if (!browser) return;
+		
+		const updateDocHeight = () => {
+			documentHeight = document.body.scrollHeight;
+		};
+		
+		// Observer les mutations du DOM pour mettre à jour la hauteur
+		const resizeObserver = new ResizeObserver(updateDocHeight);
+		resizeObserver.observe(document.body);
+		
+		return () => resizeObserver.disconnect();
+	});
 
 	const validLineCount = $derived(lineCount % 2 === 0 ? lineCount + 1 : lineCount);
 	const isMobile = $derived(windowWidth <= 480 && windowWidth > 0);
@@ -117,11 +158,11 @@
 	});
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} bind:scrollY={scrollY} />
 
 {#if browser && windowWidth > 0}
-	<div class="decorative-lines" class:mobile={isMobile}>
-		<svg class="lines-svg" viewBox="0 0 350 1000" preserveAspectRatio="none">
+	<div class="decorative-lines" class:mobile={isMobile} style="--push-distance: {pushDistance()}px;">
+		<svg class="lines-svg left-lines" viewBox="0 0 350 1000" preserveAspectRatio="none">
 			<defs>
 				<!-- Gradient pour effet de profondeur en mobile -->
 				{#if isMobile}
@@ -193,7 +234,7 @@
 		</svg>
 
 		{#if !isMobile}
-			<svg class="lines-svg mirror" viewBox="0 0 350 1000" preserveAspectRatio="none">
+			<svg class="lines-svg mirror right-lines" viewBox="0 0 350 1000" preserveAspectRatio="none">
 				<defs>
 					{#each lines as line (line.id)}
 						<clipPath id="clip-right-{line.id}">
@@ -269,6 +310,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		--push-distance: 0px;
 	}
 
 	.decorative-lines.mobile {
@@ -280,6 +322,16 @@
 	.lines-svg {
 		width: 350px;
 		height: 75%;
+		will-change: transform;
+	}
+
+	/* Effet de push dynamique sur les lignes gauches et droites */
+	.left-lines {
+		transform: translateX(calc(var(--push-distance) * -1));
+	}
+
+	.right-lines {
+		transform: translateX(var(--push-distance));
 	}
 
 	.line {
@@ -293,6 +345,7 @@
 	@media (min-width: 481px) and (prefers-reduced-motion: no-preference) {
 		.lines-svg {
 			transition:
+				transform 0.15s ease-out,
 				width 0.3s ease,
 				height 0.3s ease;
 		}
@@ -309,6 +362,10 @@
 			opacity: 1;
 			transform: scaleX(1);
 			animation: none;
+		}
+
+		.lines-svg {
+			transition: none;
 		}
 	}
 
@@ -328,6 +385,11 @@
 			max-width: 420px;
 			height: 100%;
 			/* Légère translation pour créer plus de dynamisme */
+			transform: translateX(-5%);
+		}
+
+		.left-lines,
+		.right-lines {
 			transform: translateX(-5%);
 		}
 
